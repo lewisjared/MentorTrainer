@@ -61,10 +61,10 @@ endif
 #
 
 # Define project name here
-PROJECT = ch
+PROJECT = MentorTrainer
 
 # Imported source files and paths
-CHIBIOS = ../..
+CHIBIOS = C:/ChiBIOS
 include $(CHIBIOS)/boards/ST_STM32F4_DISCOVERY/board.mk
 include $(CHIBIOS)/os/hal/platforms/STM32F4xx/platform.mk
 include $(CHIBIOS)/os/hal/hal.mk
