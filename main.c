@@ -104,14 +104,12 @@ int main(void) {
    * a shell respawn upon its termination.
    */
   while (TRUE) {
-	  char ch =  chSequentialStreamGet(&SDU1);
-	  if (ch == 'p')
-	  {
-		  //Sample ADCs
-		  adcConvert(&ADCD1, &adcgrpcfg1, samples, ADC_BUF_DEPTH);
-		  int i;
-		  for (i = 0; i < ADC_NUM_CHANNELS; i++)
-			  chprintf(&SDU1, "%u\r\n", samples[i]);
-	  }
+	  systime_t time = chTimeNow();
+
+	  //Sample ADCs
+	  adcConvert(&ADCD1, &adcgrpcfg1, samples, ADC_BUF_DEPTH);
+	  chSequentialStreamWrite(&SDU1, samples, ADC_NUM_CHANNELS*sizeof(adcsample_t));
+
+	  chThdSleepUntil(time + MS2ST(1000));
   }
 }
