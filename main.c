@@ -31,27 +31,26 @@ SerialUSBDriver SDU1;
 static adcsample_t samples[ADC_NUM_CHANNELS * ADC_BUF_DEPTH];
 
 static void adcerrorcallback(ADCDriver *adcp, adcerror_t err) {
-
-  (void)adcp;
-  (void)err;
+	(void)adcp;
+	(void)err;
 }
 
 static const ADCConversionGroup adcgrpcfg1 = {
-  FALSE,
-  ADC_NUM_CHANNELS,
-  NULL,
-  adcerrorcallback,
-  0,                        /* CR1 */
-  ADC_CR2_SWSTART,          /* CR2 */
-  0,
-  ADC_SMPR2_SMP_AN0(ADC_SAMPLE_3) | ADC_SMPR2_SMP_AN1(ADC_SAMPLE_3) |
-  ADC_SMPR2_SMP_AN2(ADC_SAMPLE_3) | ADC_SMPR2_SMP_AN3(ADC_SAMPLE_3) |
-  ADC_SMPR2_SMP_AN4(ADC_SAMPLE_3) | ADC_SMPR2_SMP_AN5(ADC_SAMPLE_3),                        /* SMPR2 */
-  ADC_SQR1_NUM_CH(ADC_NUM_CHANNELS),
-  0,                        /* SQR2 */
-  ADC_SQR3_SQ6_N(ADC_CHANNEL_IN5)   | ADC_SQR3_SQ5_N(ADC_CHANNEL_IN4) |
-  ADC_SQR3_SQ4_N(ADC_CHANNEL_IN3)   | ADC_SQR3_SQ3_N(ADC_CHANNEL_IN2) |
-  ADC_SQR3_SQ2_N(ADC_CHANNEL_IN1)   | ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0)
+	FALSE,
+	ADC_NUM_CHANNELS,
+	NULL,
+	adcerrorcallback,
+	0,                        /* CR1 */
+	ADC_CR2_SWSTART,          /* CR2 */
+	0,
+	ADC_SMPR2_SMP_AN0(ADC_SAMPLE_3) | ADC_SMPR2_SMP_AN1(ADC_SAMPLE_3) |
+	ADC_SMPR2_SMP_AN2(ADC_SAMPLE_3) | ADC_SMPR2_SMP_AN3(ADC_SAMPLE_3) |
+	ADC_SMPR2_SMP_AN4(ADC_SAMPLE_3) | ADC_SMPR2_SMP_AN5(ADC_SAMPLE_3),                        /* SMPR2 */
+	ADC_SQR1_NUM_CH(ADC_NUM_CHANNELS),
+	0,                        /* SQR2 */
+	ADC_SQR3_SQ6_N(ADC_CHANNEL_IN5)   | ADC_SQR3_SQ5_N(ADC_CHANNEL_IN4) |
+	ADC_SQR3_SQ4_N(ADC_CHANNEL_IN3)   | ADC_SQR3_SQ3_N(ADC_CHANNEL_IN2) |
+	ADC_SQR3_SQ2_N(ADC_CHANNEL_IN1)   | ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0)
 };
 
 
@@ -65,51 +64,56 @@ static const ADCConversionGroup adcgrpcfg1 = {
  */
 int main(void) {
 
-  /*
-   * System initializations.
-   * - HAL initialization, this also initializes the configured device drivers
-   *   and performs the board-specific initializations.
-   * - Kernel initialization, the main() function becomes a thread and the
-   *   RTOS is active.
-   */
-  halInit();
-  chSysInit();
+	/*
+	* System initializations.
+	* - HAL initialization, this also initializes the configured device drivers
+	*   and performs the board-specific initializations.
+	* - Kernel initialization, the main() function becomes a thread and the
+	*   RTOS is active.
+	*/
+	halInit();
+	chSysInit();
 
-  palSetGroupMode(GPIOA, PAL_PORT_BIT(0) | PAL_PORT_BIT(1) |
-		  	  	  	  	  PAL_PORT_BIT(2) | PAL_PORT_BIT(3) |
-		  	  	  	  	  PAL_PORT_BIT(4) | PAL_PORT_BIT(5),
-                  0, PAL_MODE_INPUT_ANALOG);
+	palSetGroupMode(GPIOA, PAL_PORT_BIT(0) | PAL_PORT_BIT(1) |
+						  PAL_PORT_BIT(2) | PAL_PORT_BIT(3) |
+						  PAL_PORT_BIT(4) | PAL_PORT_BIT(5),
+				  0, PAL_MODE_INPUT_ANALOG);
 
-  adcStart(&ADCD1, NULL);
+	adcStart(&ADCD1, NULL);
 
-  /*
-   * Initializes a serial-over-USB CDC driver.
-   */
-  sduObjectInit(&SDU1);
-  sduStart(&SDU1, &serusbcfg);
+	/*
+	* Initializes a serial-over-USB CDC driver.
+	*/
+	sduObjectInit(&SDU1);
+	sduStart(&SDU1, &serusbcfg);
 
-  /*
-   * Activates the USB driver and then the USB bus pull-up on D+.
-   * Note, a delay is inserted in order to not have to disconnect the cable
-   * after a reset.
-   */
-  usbDisconnectBus(serusbcfg.usbp);
-  chThdSleepMilliseconds(1000);
-  usbStart(serusbcfg.usbp, &usbcfg);
-  usbConnectBus(serusbcfg.usbp);
+	/*
+	* Activates the USB driver and then the USB bus pull-up on D+.
+	* Note, a delay is inserted in order to not have to disconnect the cable
+	* after a reset.
+	*/
+
+	palSetPadMode(GPIOA, 12, PAL_MODE_OUTPUT_PUSHPULL);
+	palClearPad(GPIOA, 12);
+	chThdSleepMilliseconds(1500);
+	usbStart(serusbcfg.usbp, &usbcfg);
+	palSetPad(GPIOA, 12);
+	palSetPadMode(GPIOA, 12, PAL_MODE_ALTERNATE(10));
 
 
-  /*
-   * Normal main() thread activity, in this demo it just performs
-   * a shell respawn upon its termination.
-   */
-  while (TRUE) {
-	  systime_t time = chTimeNow();
+	/*
+	* Normal main() thread activity, in this demo it just performs
+	* a shell respawn upon its termination.
+	*/
+	while (TRUE) {
+		palClearPad(GPIOD, GPIOD_LED5);
+		systime_t time = chTimeNow();
 
-	  //Sample ADCs
-	  adcConvert(&ADCD1, &adcgrpcfg1, samples, ADC_BUF_DEPTH);
-	  chSequentialStreamWrite(&SDU1, samples, ADC_NUM_CHANNELS*sizeof(adcsample_t));
+		//Sample ADCs
+		adcConvert(&ADCD1, &adcgrpcfg1, samples, ADC_BUF_DEPTH);
+		chSequentialStreamWrite(&SDU1,(uint8_t*) samples, ADC_NUM_CHANNELS*sizeof(adcsample_t));
 
-	  chThdSleepUntil(time + MS2ST(1000));
-  }
+		palSetPad(GPIOD, GPIOD_LED5);
+		chThdSleepUntil(time + MS2ST(20));
+	}
 }
